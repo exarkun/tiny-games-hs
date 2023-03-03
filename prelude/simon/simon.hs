@@ -16,10 +16,17 @@ challenge moves = do
     readMoves moves
     putStrLn ""
 
+x :: Monad m => (a -> b -> Bool) -> [m a] -> [m b] -> m Bool
+x _ [] _ = pure True
+x _ _ [] = pure True
+x f (a : as) (b : bs) = do
+    r <- f <$> a <*> b
+    if r then x f as bs else pure False
+
 readMoves :: String -> IO ()
 readMoves expected = do
-    results <- zipWithM (liftM2 (==)) (repeat getChar) (map pure expected)
-    if and results then pure () else error "You lose"
+    results <- x (==) (repeat getChar) (map pure expected)
+    if results then pure () else error "You lose"
 
 pickLetter :: Char -> Char
 pickLetter ch = "wasd" !! (fromEnum ch `mod` 4)
